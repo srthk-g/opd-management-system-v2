@@ -38,7 +38,7 @@ def register_patient():
         db.execute("INSERT INTO patients VALUES (NULL, ?, ?, ?)",
                    (request.form["name"], request.form["phone"], request.form["password"]))
         db.commit()
-        return redirect("/login/patient")
+        return redirect(url_for("login_patient"))
     return render_template("register_patient.html")
 
 
@@ -53,15 +53,16 @@ def login_patient():
 
         if user:
             session["patient_id"] = user[0]
-            return redirect("patient_dashboard.html")
+            return redirect(url_for("patient_dashboard"))
 
     return render_template("login_patient.html")
 
 
-@app.route("patient_dashboard.html ")
+# ✅ FIXED ROUTE (added slash + removed space)
+@app.route("/patient_dashboard")
 def patient_dashboard():
     if "patient_id" not in session:
-        return redirect("login_patient.html")
+        return redirect(url_for("login_patient"))
 
     db = get_db()
     doctors = db.execute(
@@ -71,20 +72,21 @@ def patient_dashboard():
     return render_template("patient_dashboard.html", doctors=doctors)
 
 
-@app.route("register_doctor.html", methods=["GET", "POST"])
+# ✅ FIXED ROUTE
+@app.route("/register/doctor", methods=["GET", "POST"])
 def register_doctor():
     if request.method == "POST":
         db = get_db()
         db.execute("INSERT INTO doctors VALUES (NULL, ?, ?, ?, 1)",
                    (request.form["name"], request.form["specialty"], request.form["password"]))
         db.commit()
-        return redirect("login_doctor.html")
+        return redirect(url_for("login_doctor"))
 
     return render_template("register_doctor.html")
 
 
-# ✅ FIXED LOGIN
-@app.route("login_doctor.html", methods=["GET", "POST"])
+# ✅ FIXED ROUTE
+@app.route("/login/doctor", methods=["GET", "POST"])
 def login_doctor():
     if request.method == "POST":
         db = get_db()
@@ -95,7 +97,7 @@ def login_doctor():
 
         if doctor:
             session["doctor_id"] = doctor[0]
-            return redirect(url_for("doctor_dashboard"))  # ✅ FIXED
+            return redirect(url_for("doctor_dashboard"))
 
     return render_template("login_doctor.html")
 
@@ -103,7 +105,7 @@ def login_doctor():
 @app.route("/doctor/dashboard")
 def doctor_dashboard():
     if "doctor_id" not in session:
-        return redirect("login_doctor.html")
+        return redirect(url_for("login_doctor"))
 
     db = get_db()
     appointments = db.execute(
@@ -120,14 +122,14 @@ def doctor_dashboard():
 @app.route("/book", methods=["POST"])
 def book():
     if "patient_id" not in session:
-        return redirect("login_patient.html")
+        return redirect(url_for("login_patient"))
 
     db = get_db()
     db.execute("INSERT INTO appointments VALUES (NULL, ?, ?, ?, ?)",
                (session["patient_id"], request.form["doctor"], request.form["date"], request.form["time"]))
     db.commit()
 
-    return redirect("patient_dashboard.html")
+    return redirect(url_for("patient_dashboard"))
 
 
 @app.route("/logout")
