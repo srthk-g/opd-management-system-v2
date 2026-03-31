@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Patient Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body{ font-family:Arial,sans-serif; background:#f4f6f9; margin:0; }
+    header{ background:#0d6efd; color:white; padding:20px; text-align:center; }
+    .container{ max-width:500px; margin:40px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
+    h3{ color:#0d6efd; }
+    label{ display:block; margin:12px 0 4px; font-weight:bold; }
+    select, input{ width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box; font-size:14px; }
+    button{ margin-top:20px; width:100%; padding:12px; background:#0d6efd; color:white; border:none; border-radius:5px; font-size:16px; cursor:pointer; }
+    button:hover{ background:#0a58ca; }
+    .logout{ text-align:center; margin-top:20px; }
+    .logout a{ color:red; font-weight:bold; text-decoration:none; }
+  </style>
+</head>
+<body>
+<header><h1>Patient Dashboard</h1></header>
+<div class="container">
+<h3>Book an Appointment</h3>
+<form method="POST" action="/book">
+  <label>Select Doctor</label>
+  <select name="doctor" required>
+    {% for d in doctors %}
+      <option value="{{ d[0] }}">{{ d[1] }} ({{ d[2] }})</option>
+    {% endfor %}
+  </select>
+  <label>Date</label>
+  <input type="date" name="date" required>
+  <label>Time</label>
+  <input type="time" name="time" required>
+  <button type="submit">Confirm Appointment</button>
+</form>
+</div>
+<div class="logout"><a href="/logout">Logout</a></div>
+</body>
+</html>
