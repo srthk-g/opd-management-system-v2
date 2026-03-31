@@ -2,18 +2,19 @@ from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "opd_secret_key"
+app.secret_key = "secret_key"
+
 
 def get_db():
     return sqlite3.connect("hospital.db")
 
+
+# ---------------- HOME ----------------
 @app.route("/")
 def home():
     db = get_db()
 
-    beds = db.execute(
-        "SELECT available FROM beds"
-    ).fetchone()[0]
+    beds = db.execute("SELECT available FROM beds").fetchone()[0]
 
     doctor_count = db.execute(
         "SELECT COUNT(*) FROM doctors"
@@ -23,26 +24,26 @@ def home():
         "SELECT id, name, specialty FROM doctors WHERE available=1"
     ).fetchall()
 
-    return render_template(
-        "index.html",
-        beds=beds,
-        doctor_count=doctor_count,
-        doctors=doctors
-    )
+    return render_template("index.html", beds=beds, doctor_count=doctor_count, doctors=doctors)
 
 
-@app.route("/register_patient", methods=["GET", "POST"])
+# ---------------- PATIENT ----------------
+
+@app.route("/register/patient", methods=["GET", "POST"])
 def register_patient():
     if request.method == "POST":
         db = get_db()
-        db.execute("INSERT INTO patients VALUES (NULL, ?, ?, ?)",
-                   (request.form["name"], request.form["phone"], request.form["password"]))
+        db.execute(
+            "INSERT INTO patients VALUES (NULL, ?, ?, ?)",
+            (request.form["name"], request.form["phone"], request.form["password"])
+        )
         db.commit()
         return redirect(url_for("login_patient"))
+
     return render_template("register_patient.html")
 
 
-@app.route("/login_patient", methods=["GET", "POST"])
+@app.route("/login/patient", methods=["GET", "POST"])
 def login_patient():
     if request.method == "POST":
         db = get_db()
@@ -58,7 +59,6 @@ def login_patient():
     return render_template("login_patient.html")
 
 
-# ✅ FIXED ROUTE (added slash + removed space)
 @app.route("/patient_dashboard")
 def patient_dashboard():
     if "patient_id" not in session:
@@ -72,21 +72,23 @@ def patient_dashboard():
     return render_template("patient_dashboard.html", doctors=doctors)
 
 
-# ✅ FIXED ROUTE
-@app.route("/register_doctor", methods=["GET", "POST"])
+# ---------------- DOCTOR ----------------
+
+@app.route("/register/doctor", methods=["GET", "POST"])
 def register_doctor():
     if request.method == "POST":
         db = get_db()
-        db.execute("INSERT INTO doctors VALUES (NULL, ?, ?, ?, 1)",
-                   (request.form["name"], request.form["specialty"], request.form["password"]))
+        db.execute(
+            "INSERT INTO doctors VALUES (NULL, ?, ?, ?, 1)",
+            (request.form["name"], request.form["specialty"], request.form["password"])
+        )
         db.commit()
         return redirect(url_for("login_doctor"))
 
     return render_template("register_doctor.html")
 
 
-# ✅ FIXED ROUTE
-@app.route("/login_doctor", methods=["GET", "POST"])
+@app.route("/login/doctor", methods=["GET", "POST"])
 def login_doctor():
     if request.method == "POST":
         db = get_db()
@@ -102,7 +104,7 @@ def login_doctor():
     return render_template("login_doctor.html")
 
 
-@app.route("/doctor_dashboard")
+@app.route("/doctor/dashboard")
 def doctor_dashboard():
     if "doctor_id" not in session:
         return redirect(url_for("login_doctor"))
@@ -111,7 +113,7 @@ def doctor_dashboard():
     appointments = db.execute(
         """SELECT p.name, a.date, a.time 
            FROM appointments a 
-           JOIN patients p ON a.patient_id=p.id 
+           JOIN patients p ON a.patient_id = p.id 
            WHERE a.doctor_id=?""",
         (session["doctor_id"],)
     ).fetchall()
@@ -119,24 +121,56 @@ def doctor_dashboard():
     return render_template("doctor_dashboard.html", appointments=appointments)
 
 
+# ---------------- INVENTORY ----------------
+
+@app.route("/inventory")
+def inventory():
+    return render_template("inventory.html")
+
+
+@app.route("/inventory_manager")
+def inventory_manager():
+    return render_template("inventory_manager.html")
+
+
+# ---------------- BOOKING ----------------
+
 @app.route("/book", methods=["POST"])
 def book():
     if "patient_id" not in session:
         return redirect(url_for("login_patient"))
 
     db = get_db()
-    db.execute("INSERT INTO appointments VALUES (NULL, ?, ?, ?, ?)",
-               (session["patient_id"], request.form["doctor"], request.form["date"], request.form["time"]))
+    db.execute(
+        "INSERT INTO appointments VALUES (NULL, ?, ?, ?, ?)",
+        (
+            session["patient_id"],
+            request.form["doctor"],
+            request.form["date"],
+            request.form["time"]
+        )
+    )
     db.commit()
 
-    return redirect(url_for("patient_dashboard"))
+    return redirect(url_for("confirmation"))
 
+
+# ---------------- CONFIRMATION ----------------
+
+@app.route("/confirmation")
+def confirmation():
+    return render_template("confirmation.html")
+
+
+# ---------------- LOGOUT ----------------
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
+
+# ---------------- RUN ----------------
 
 if __name__ == "__main__":
     app.run(debug=True)
