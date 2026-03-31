@@ -31,7 +31,7 @@ def home():
     )
 
 
-@app.route("/register/patient", methods=["GET", "POST"])
+@app.route("/register_patient", methods=["GET", "POST"])
 def register_patient():
     if request.method == "POST":
         db = get_db()
@@ -42,7 +42,7 @@ def register_patient():
     return render_template("register_patient.html")
 
 
-@app.route("/login/patient", methods=["GET", "POST"])
+@app.route("/login_patient", methods=["GET", "POST"])
 def login_patient():
     if request.method == "POST":
         db = get_db()
@@ -73,7 +73,7 @@ def patient_dashboard():
 
 
 # ✅ FIXED ROUTE
-@app.route("/register/doctor", methods=["GET", "POST"])
+@app.route("/register_doctor", methods=["GET", "POST"])
 def register_doctor():
     if request.method == "POST":
         db = get_db()
@@ -86,7 +86,7 @@ def register_doctor():
 
 
 # ✅ FIXED ROUTE
-@app.route("/login/doctor", methods=["GET", "POST"])
+@app.route("/login_doctor", methods=["GET", "POST"])
 def login_doctor():
     if request.method == "POST":
         db = get_db()
@@ -102,7 +102,7 @@ def login_doctor():
     return render_template("login_doctor.html")
 
 
-@app.route("/doctor/dashboard")
+@app.route("/doctor_dashboard")
 def doctor_dashboard():
     if "doctor_id" not in session:
         return redirect(url_for("login_doctor"))
